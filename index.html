@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🇪🇸 BUSCAPOLLITOS · VERSIÓN DEFINITIVA 🐤</title>
+    <title>🇪🇸 BUSCAPOLLITOS · MULTIJUGADOR MEJORADO 🐤</title>
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -15,6 +15,7 @@
             -webkit-tap-highlight-color: transparent;
             font-family: Arial, Helvetica, sans-serif;
         }
+
         body {
             min-height: 100vh;
             background: linear-gradient(145deg, #1a4d2e, #2e7d5e);
@@ -23,15 +24,18 @@
             align-items: center;
             padding: 8px;
         }
+
         .game-container {
             width: 100%;
-            max-width: 480px;
+            max-width: 500px;
             background: #f5e7c8;
             border-radius: 40px;
             border: 4px solid #c49a6c;
             padding: 16px 12px 20px;
             box-shadow: 0 15px 20px rgba(0,0,0,0.5);
+            position: relative;
         }
+
         h1 {
             font-size: 2rem;
             text-align: center;
@@ -43,6 +47,7 @@
             gap: 8px;
             flex-wrap: wrap;
         }
+
         .name-panel {
             background: #ffefd0;
             border-radius: 60px;
@@ -50,12 +55,14 @@
             margin-bottom: 15px;
             border: 3px solid #b16f2c;
         }
+
         .name-input-group {
             display: flex;
             gap: 8px;
             align-items: center;
             flex-wrap: wrap;
         }
+
         .name-input {
             flex: 1;
             padding: 12px;
@@ -65,6 +72,7 @@
             text-align: center;
             min-width: 150px;
         }
+
         .btn-name {
             background: #f8c150;
             border: none;
@@ -76,10 +84,12 @@
             cursor: pointer;
             border: 2px solid #ffde9e;
         }
+
         .btn-name:active {
             transform: translateY(4px);
             box-shadow: 0 1px 0 #b16f2c;
         }
+
         .player-badge {
             background: #263f2b;
             color: #ffd966;
@@ -88,6 +98,7 @@
             font-size: 1.1rem;
             text-align: center;
         }
+
         .top-bar {
             background: #c49a6c;
             border-radius: 40px;
@@ -97,6 +108,7 @@
             margin-bottom: 16px;
             flex-wrap: wrap;
         }
+
         .counter {
             background: #263f2b;
             padding: 10px 16px;
@@ -109,6 +121,7 @@
             flex: 1;
             justify-content: center;
         }
+
         .btn {
             background: #f8c150;
             border: none;
@@ -122,19 +135,30 @@
             min-width: 65px;
             touch-action: manipulation;
         }
+
         .btn:active {
             transform: translateY(4px);
             box-shadow: 0 1px 0 #b16f2c;
         }
+
         .btn-secondary {
             background: #ff8c5a;
             box-shadow: 0 4px 0 #b1471c;
         }
+
+        /* NUEVO: Botón Salir (rojo) */
+        .btn-exit {
+            background: #ff4444;
+            box-shadow: 0 4px 0 #aa2222;
+            border: 2px solid #ff9999;
+        }
+
         .board-wrapper {
             display: flex;
             justify-content: center;
             width: 100%;
         }
+
         .board {
             display: grid;
             grid-template-columns: repeat(8, 1fr);
@@ -145,6 +169,7 @@
             width: fit-content;
             margin: 0 auto;
         }
+
         .cell {
             width: 42px;
             height: 42px;
@@ -160,22 +185,27 @@
             cursor: pointer;
             touch-action: manipulation;
         }
+
         .cell.visible {
             background: #d8c29b;
             box-shadow: inset 0 2px 4px #6f532e, 0 1px 0 #584229;
         }
+
         .cell.flagged:not(.visible)::before {
             content: "🇪🇸";
             font-size: 1.4rem;
         }
+
         .cell.visible.mine::before {
             content: "🐤";
             font-size: 1.4rem;
         }
+
         .cell.disabled {
             opacity: 0.6;
             pointer-events: none;
         }
+
         .multi-panel {
             background: #ffefd0;
             border-radius: 30px;
@@ -183,6 +213,7 @@
             margin: 15px 0 10px;
             border: 3px solid #b16f2c;
         }
+
         .room-input {
             width: 100%;
             padding: 12px;
@@ -192,12 +223,14 @@
             margin: 8px 0;
             text-align: center;
         }
+
         .room-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
             margin: 12px 0;
         }
+
         .room-status, .turn-display {
             background: #263f2b;
             color: #ffd966;
@@ -208,11 +241,13 @@
             margin: 10px 0;
             font-weight: bold;
         }
+
         .turn-display {
             background: #b1471c;
             color: #ffd966;
             font-size: 1.3rem;
         }
+
         .message-area {
             text-align: center;
             font-size: 1rem;
@@ -223,6 +258,7 @@
             padding: 5px;
             border-radius: 20px;
         }
+
         .hints {
             display: flex;
             flex-wrap: wrap;
@@ -230,6 +266,7 @@
             gap: 6px;
             margin-top: 10px;
         }
+
         .hint-tag {
             background: #3d280e;
             color: #ffd966;
@@ -238,6 +275,157 @@
             font-size: 0.8rem;
             border: 2px solid #e6b86b;
         }
+
+        /* NUEVO: Modal de victoria/derrota (pantalla completa) */
+        .result-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            backdrop-filter: blur(5px);
+        }
+
+        .result-modal.show {
+            display: flex;
+        }
+
+        .result-content {
+            background: #fef7e6;
+            border-radius: 60px;
+            padding: 40px 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            border: 8px solid #ffb347;
+            animation: pop 0.3s ease;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .result-content h2 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .result-content p {
+            font-size: 2rem;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .result-content .winner {
+            color: #2e7d5e;
+            font-size: 2.5rem;
+        }
+
+        .result-content .loser {
+            color: #b1471c;
+            font-size: 2.5rem;
+        }
+
+        .result-btn {
+            background: #f8c150;
+            border: none;
+            font-size: 1.8rem;
+            padding: 20px 40px;
+            border-radius: 60px;
+            font-weight: bold;
+            box-shadow: 0 6px 0 #b16f2c;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        /* NUEVO: Teclado virtual para Easter eggs */
+        .keyboard-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3500;
+        }
+
+        .keyboard-modal.show {
+            display: flex;
+        }
+
+        .keyboard-content {
+            background: #f5e7c8;
+            border-radius: 60px;
+            padding: 30px 20px;
+            max-width: 400px;
+            width: 90%;
+            border: 6px solid #c49a6c;
+        }
+
+        .keyboard-title {
+            font-size: 2rem;
+            color: #a5491c;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .keyboard-display {
+            background: #263f2b;
+            color: #ffd966;
+            font-size: 2rem;
+            padding: 20px;
+            border-radius: 40px;
+            text-align: center;
+            margin: 20px 0;
+            font-family: monospace;
+            letter-spacing: 5px;
+        }
+
+        .keyboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .key-btn {
+            background: #f8c150;
+            border: none;
+            font-size: 2rem;
+            padding: 20px;
+            border-radius: 30px;
+            box-shadow: 0 4px 0 #b16f2c;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .key-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #b16f2c;
+        }
+
+        .key-close {
+            background: #ff8c5a;
+            width: 100%;
+            padding: 15px;
+            font-size: 1.5rem;
+            border-radius: 40px;
+            border: none;
+            box-shadow: 0 4px 0 #b1471c;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
         .modal {
             position: fixed;
             top: 0;
@@ -250,9 +438,11 @@
             align-items: center;
             z-index: 2000;
         }
+
         .modal.show {
             display: flex;
         }
+
         .modal-content {
             background: #fef7e6;
             border-radius: 40px;
@@ -260,12 +450,14 @@
             max-width: 360px;
             border: 6px solid #ffb347;
         }
+
         .modal-content h2 {
             font-size: 1.8rem;
             color: #c45d1e;
             text-align: center;
             margin-bottom: 15px;
         }
+
         .modal-content p {
             font-size: 1.1rem;
             margin: 12px 0;
@@ -273,6 +465,7 @@
             align-items: center;
             gap: 12px;
         }
+
         .modal-btn {
             background: #f8c150;
             border: none;
@@ -287,6 +480,7 @@
     </style>
 </head>
 <body>
+    <!-- MODAL TUTORIAL -->
     <div id="tutorialModal" class="modal">
         <div class="modal-content">
             <h2>🐣 ¡BIENVENIDO! 🐣</h2>
@@ -297,6 +491,35 @@
             <p><span>🎮</span> MULTIJUGADOR: crea sala</p>
             <p><span>👥</span> Pon tu nombre para jugar</p>
             <button class="modal-btn" id="closeTutorialBtn">¡A JUGAR!</button>
+        </div>
+    </div>
+
+    <!-- NUEVO: Modal de resultado (pantalla completa) -->
+    <div id="resultModal" class="result-modal">
+        <div class="result-content">
+            <h2 id="resultEmoji">🏆</h2>
+            <p id="resultMessage">Jugador 1 ganó!</p>
+            <button class="result-btn" id="closeResultBtn">CONTINUAR</button>
+        </div>
+    </div>
+
+    <!-- NUEVO: Teclado virtual para Easter eggs -->
+    <div id="keyboardModal" class="keyboard-modal">
+        <div class="keyboard-content">
+            <div class="keyboard-title">✨ EASTER EGGS ✨</div>
+            <div class="keyboard-display" id="keyboardDisplay"></div>
+            <div class="keyboard-grid">
+                <button class="key-btn" data-key="P">P</button>
+                <button class="key-btn" data-key="I">I</button>
+                <button class="key-btn" data-key="O">O</button>
+                <button class="key-btn" data-key="E">E</button>
+                <button class="key-btn" data-key="S">S</button>
+                <button class="key-btn" data-key="P">P</button>
+                <button class="key-btn" data-key="🐣">🐣</button>
+                <button class="key-btn" data-key="✨">✨</button>
+                <button class="key-btn" data-key="⌫">⌫</button>
+            </div>
+            <button class="key-close" id="closeKeyboardBtn">CERRAR</button>
         </div>
     </div>
 
@@ -319,7 +542,8 @@
                 <span id="flagsCounter">10</span>
             </div>
             <button class="btn" id="settingsBtn">⚙️</button>
-            <button class="btn btn-secondary" id="resetBtn">🔄</button>
+            <!-- NUEVO: Botón dinámico (Reset/Salir) -->
+            <button class="btn btn-secondary" id="actionBtn">🔄</button>
         </div>
 
         <div id="turnDisplay" class="turn-display" style="display: none;">
@@ -344,6 +568,8 @@
             </div>
             <div id="roomStatus" class="room-status" style="display: none;"></div>
             <div id="playersStatus" class="room-status" style="display: none;"></div>
+            <!-- NUEVO: Botón para teclado virtual -->
+            <button class="btn" id="showKeyboardBtn" style="width: 100%; margin-top: 10px;">⌨️ EASTER EGGS (móvil)</button>
         </div>
 
         <div class="message-area" id="messageDisplay">
@@ -406,6 +632,12 @@
         const turnDisplay = document.getElementById('turnDisplay');
         const playerNameInput = document.getElementById('playerNameInput');
         const playerBadge = document.getElementById('playerBadge');
+        const actionBtn = document.getElementById('actionBtn');
+        const resultModal = document.getElementById('resultModal');
+        const resultMessage = document.getElementById('resultMessage');
+        const resultEmoji = document.getElementById('resultEmoji');
+        const keyboardModal = document.getElementById('keyboardModal');
+        const keyboardDisplay = document.getElementById('keyboardDisplay');
 
         // Nombre
         document.getElementById('setNameBtn').addEventListener('click', function() {
@@ -537,7 +769,6 @@
             if (cell.mine) {
                 cell.revealed = true;
                 gameOver = true;
-                messageDisplay.textContent = `💥 ${playerName} pisó un pollito! 💥`;
                 renderBoard();
                 if (db && currentRoom) {
                     sendGameOverToFirebase(playerName);
@@ -573,7 +804,6 @@
             if (remainingCells === 0 && !gameOver) {
                 gameWon = true;
                 gameOver = true;
-                messageDisplay.textContent = `🏆 ${playerName} GANÓ! 🏆`;
                 for (let r = 0; r < ROWS; r++) {
                     for (let c = 0; c < COLS; c++) {
                         if (board[r][c].mine && !board[r][c].flagged) {
@@ -581,6 +811,9 @@
                             flagsUsed++;
                         }
                     }
+                }
+                if (db && currentRoom) {
+                    sendVictoryToFirebase(playerName);
                 }
             }
 
@@ -618,6 +851,18 @@
             flagsCounter.textContent = TOTAL_MINES - flagsUsed;
         }
 
+        // NUEVO: Mostrar resultado en pantalla completa
+        function showResult(winner, loser, isVictory) {
+            if (isVictory) {
+                resultEmoji.textContent = '🏆';
+                resultMessage.innerHTML = `<span class="winner">${winner}</span> GANÓ! 🎉`;
+            } else {
+                resultEmoji.textContent = '💥';
+                resultMessage.innerHTML = `<span class="loser">${loser}</span> perdió...<br> Ganó <span class="winner">${winner}</span>!`;
+            }
+            resultModal.classList.add('show');
+        }
+
         async function createRoom() {
             const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
             
@@ -645,6 +890,10 @@
                 
                 turnDisplay.style.display = 'block';
                 turnDisplay.innerHTML = `🎮 Turno: <strong>${playerName}</strong> (tú)`;
+                
+                // NUEVO: Cambiar botón a "Salir"
+                actionBtn.textContent = '🚪 SALIR';
+                actionBtn.classList.add('btn-exit');
                 
                 listenForRoomChanges();
                 
@@ -685,6 +934,10 @@
                     turnDisplay.style.display = 'block';
                     turnDisplay.innerHTML = `⏳ Esperando turno...`;
                     
+                    // NUEVO: Cambiar botón a "Salir"
+                    actionBtn.textContent = '🚪 SALIR';
+                    actionBtn.classList.add('btn-exit');
+                    
                     listenForRoomChanges();
                     
                 } else {
@@ -693,6 +946,20 @@
             } catch (error) {
                 console.error("Error:", error);
             }
+        }
+
+        // NUEVO: Salir de la sala
+        function leaveRoom() {
+            currentRoom = null;
+            isHost = false;
+            myTurn = false;
+            roomStatus.style.display = 'none';
+            playersStatus.style.display = 'none';
+            turnDisplay.style.display = 'none';
+            actionBtn.textContent = '🔄';
+            actionBtn.classList.remove('btn-exit');
+            initBoard();
+            messageDisplay.textContent = 'Has salido de la sala';
         }
 
         function listenForRoomChanges() {
@@ -722,9 +989,12 @@
                         renderBoard();
                     }
                     
+                    // NUEVO: Mostrar resultado cuando alguien gana/pierde
                     if (data.gameOver) {
                         gameOver = true;
-                        messageDisplay.textContent = data.gameOverMessage || 'Partida terminada';
+                        if (data.winner && data.loser) {
+                            showResult(data.winner, data.loser, data.isVictory);
+                        }
                         renderBoard();
                     }
                 }
@@ -749,27 +1019,71 @@
             const winner = roomPlayers.find(p => p.id !== playerId)?.name || 'otro';
             await db.collection('rooms').doc(currentRoom).update({
                 gameOver: true,
-                gameOverMessage: `💥 ${loserName} perdió! Ganó ${winner} 💥`
+                winner: winner,
+                loser: loserName,
+                isVictory: false
             });
+            showResult(winner, loserName, false);
+        }
+
+        async function sendVictoryToFirebase(winnerName) {
+            const loser = roomPlayers.find(p => p.id !== playerId)?.name || 'otro';
+            await db.collection('rooms').doc(currentRoom).update({
+                gameOver: true,
+                winner: winnerName,
+                loser: loser,
+                isVictory: true
+            });
+            showResult(winnerName, loser, true);
         }
 
         // Easter eggs
         let eggSeq = [];
-        window.addEventListener('keydown', function(e) {
-            const key = e.key.toUpperCase();
+        function checkEggSequence(key) {
             eggSeq.push(key);
             if (eggSeq.length > 6) eggSeq.shift();
             const seq = eggSeq.join('');
+            
             if (seq.includes('PIO')) {
                 messageDisplay.textContent = '🌸 MODO PIO ACTIVADO 🌸';
                 document.body.style.filter = 'hue-rotate(180deg)';
                 eggSeq = [];
+                keyboardDisplay.textContent = '';
             }
             if (seq.includes('ESP')) {
                 messageDisplay.textContent = '🇪🇸 OLÉ! 🇪🇸';
                 document.querySelector('.game-container').style.background = '#ffd700';
                 eggSeq = [];
+                keyboardDisplay.textContent = '';
             }
+            keyboardDisplay.textContent = eggSeq.join(' ');
+        }
+
+        // Teclado virtual
+        document.querySelectorAll('.key-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const key = this.dataset.key;
+                if (key === '⌫') {
+                    eggSeq.pop();
+                } else {
+                    checkEggSequence(key);
+                }
+            });
+        });
+
+        document.getElementById('showKeyboardBtn').addEventListener('click', function() {
+            keyboardModal.classList.add('show');
+        });
+
+        document.getElementById('closeKeyboardBtn').addEventListener('click', function() {
+            keyboardModal.classList.remove('show');
+            eggSeq = [];
+            keyboardDisplay.textContent = '';
+        });
+
+        // Cerrar resultado
+        document.getElementById('closeResultBtn').addEventListener('click', function() {
+            resultModal.classList.remove('show');
         });
 
         // Tutorial
@@ -788,8 +1102,13 @@
             }
         });
 
-        document.getElementById('resetBtn').addEventListener('click', function() {
-            initBoard();
+        // NUEVO: Botón dinámico (Reset o Salir)
+        actionBtn.addEventListener('click', function() {
+            if (currentRoom) {
+                leaveRoom();
+            } else {
+                initBoard();
+            }
         });
 
         document.getElementById('closeTutorialBtn').addEventListener('click', function() {

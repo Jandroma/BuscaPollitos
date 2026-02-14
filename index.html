@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🇪🇸 BUSCAPOLLITOS · VERSIÓN DEFINITIVA 🐤</title>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        body {
+            min-height: 100vh;
+            background: linear-gradient(145deg, #1a4d2e, #2e7d5e);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 8px;
+        }
+        .game-container {
+            width: 100%;
+            max-width: 480px;
+            background: #f5e7c8;
+            border-radius: 40px;
+            border: 4px solid #c49a6c;
+            padding: 16px 12px 20px;
+            box-shadow: 0 15px 20px rgba(0,0,0,0.5);
+        }
+        h1 {
+            font-size: 2rem;
+            text-align: center;
+            color: #ffc964;
+            text-shadow: 3px 3px 0 #a5491c;
+            margin: 0 0 12px;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .name-panel {
+            background: #ffefd0;
+            border-radius: 60px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 3px solid #b16f2c;
+        }
+        .name-input-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .name-input {
+            flex: 1;
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 40px;
+            border: 3px solid #c49a6c;
+            text-align: center;
+            min-width: 150px;
+        }
+        .btn-name {
+            background: #f8c150;
+            border: none;
+            font-size: 1rem;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-weight: bold;
+            box-shadow: 0 4px 0 #b16f2c;
+            cursor: pointer;
+            border: 2px solid #ffde9e;
+        }
+        .btn-name:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #b16f2c;
+        }
+        .player-badge {
+            background: #263f2b;
+            color: #ffd966;
+            padding: 8px 15px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        .top-bar {
+            background: #c49a6c;
+            border-radius: 40px;
+            padding: 8px;
+            display: flex;
+            gap: 6px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .counter {
+            background: #263f2b;
+            padding: 10px 16px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 1.4rem;
+            color: #ffd966;
+            flex: 1;
+            justify-content: center;
+        }
+        .btn {
+            background: #f8c150;
+            border: none;
+            font-size: 1.1rem;
+            padding: 10px 16px;
+            border-radius: 40px;
+            font-weight: bold;
+            box-shadow: 0 4px 0 #b16f2c;
+            cursor: pointer;
+            border: 2px solid #ffde9e;
+            min-width: 65px;
+            touch-action: manipulation;
+        }
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #b16f2c;
+        }
+        .btn-secondary {
+            background: #ff8c5a;
+            box-shadow: 0 4px 0 #b1471c;
+        }
+        .board-wrapper {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 3px;
+            background: #ab8b62;
+            padding: 12px;
+            border-radius: 25px;
+            width: fit-content;
+            margin: 0 auto;
+        }
+        .cell {
+            width: 42px;
+            height: 42px;
+            background: #fbeba4;
+            border-radius: 8px 2px 8px 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: bold;
+            box-shadow: inset 0 -3px 0 #b38b51, 0 3px 0 #755f3a;
+            border: 2px solid #f0b56c;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        .cell.visible {
+            background: #d8c29b;
+            box-shadow: inset 0 2px 4px #6f532e, 0 1px 0 #584229;
+        }
+        .cell.flagged:not(.visible)::before {
+            content: "🇪🇸";
+            font-size: 1.4rem;
+        }
+        .cell.visible.mine::before {
+            content: "🐤";
+            font-size: 1.4rem;
+        }
+        .cell.disabled {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .multi-panel {
+            background: #ffefd0;
+            border-radius: 30px;
+            padding: 15px;
+            margin: 15px 0 10px;
+            border: 3px solid #b16f2c;
+        }
+        .room-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 30px;
+            border: 3px solid #c49a6c;
+            margin: 8px 0;
+            text-align: center;
+        }
+        .room-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 12px 0;
+        }
+        .room-status, .turn-display {
+            background: #263f2b;
+            color: #ffd966;
+            padding: 12px;
+            border-radius: 30px;
+            text-align: center;
+            font-size: 1.1rem;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .turn-display {
+            background: #b1471c;
+            color: #ffd966;
+            font-size: 1.3rem;
+        }
+        .message-area {
+            text-align: center;
+            font-size: 1rem;
+            color: #ffd966;
+            margin: 12px 0 5px;
+            min-height: 28px;
+            background: rgba(0,0,0,0.2);
+            padding: 5px;
+            border-radius: 20px;
+        }
+        .hints {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .hint-tag {
+            background: #3d280e;
+            color: #ffd966;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            border: 2px solid #e6b86b;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: #fef7e6;
+            border-radius: 40px;
+            padding: 25px 20px;
+            max-width: 360px;
+            border: 6px solid #ffb347;
+        }
+        .modal-content h2 {
+            font-size: 1.8rem;
+            color: #c45d1e;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .modal-content p {
+            font-size: 1.1rem;
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .modal-btn {
+            background: #f8c150;
+            border: none;
+            font-size: 1.4rem;
+            padding: 12px 25px;
+            border-radius: 50px;
+            width: 100%;
+            margin-top: 15px;
+            box-shadow: 0 5px 0 #b16f2c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="tutorialModal" class="modal">
+        <div class="modal-content">
+            <h2>🐣 ¡BIENVENIDO! 🐣</h2>
+            <p><span>👉</span> Clic: descubrir casilla</p>
+            <p><span>🇪🇸</span> Clic derecho: bandera</p>
+            <p><span>Ⅰ Ⅱ Ⅲ</span> Números romanos</p>
+            <p><span>🐤</span> Pollitos = minas</p>
+            <p><span>🎮</span> MULTIJUGADOR: crea sala</p>
+            <p><span>👥</span> Pon tu nombre para jugar</p>
+            <button class="modal-btn" id="closeTutorialBtn">¡A JUGAR!</button>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <h1>
+            <span>🇪🇸</span> BUSCAPOLLITOS <span>🐤</span>
+        </h1>
+
+        <div class="name-panel" id="namePanel">
+            <div class="name-input-group">
+                <input type="text" id="playerNameInput" class="name-input" placeholder="Tu nombre" maxlength="15" value="Jugador">
+                <button class="btn-name" id="setNameBtn">✅ OK</button>
+            </div>
+            <div id="playerBadge" class="player-badge" style="display: none;"></div>
+        </div>
+
+        <div class="top-bar">
+            <div class="counter">
+                <span>🇪🇸</span>
+                <span id="flagsCounter">10</span>
+            </div>
+            <button class="btn" id="settingsBtn">⚙️</button>
+            <button class="btn btn-secondary" id="resetBtn">🔄</button>
+        </div>
+
+        <div id="turnDisplay" class="turn-display" style="display: none;">
+            ⏳ Esperando turno...
+        </div>
+
+        <div class="board-wrapper">
+            <div class="board" id="gameBoard"></div>
+        </div>
+
+        <div class="multi-panel" id="multiPanel">
+            <h3 style="text-align: center; font-size: 1.3rem;">🎮 MULTIJUGADOR ONLINE</h3>
+            
+            <div id="firebaseStatus" style="text-align: center; margin: 10px 0; color: #b16f2c; font-weight: bold;">
+                ✅ Firebase conectado!
+            </div>
+            
+            <input type="text" id="roomCode" class="room-input" placeholder="Código de sala (ej: ABC123)" maxlength="6">
+            <div class="room-buttons">
+                <button class="btn" id="createRoomBtn">➕ CREAR SALA</button>
+                <button class="btn" id="joinRoomBtn">🔑 UNIRSE</button>
+            </div>
+            <div id="roomStatus" class="room-status" style="display: none;"></div>
+            <div id="playersStatus" class="room-status" style="display: none;"></div>
+        </div>
+
+        <div class="message-area" id="messageDisplay">
+            👆 Clic derecho para bandera
+        </div>
+
+        <div class="hints">
+            <span class="hint-tag">🐣 PIO</span>
+            <span class="hint-tag">🇪🇸 ESP</span>
+            <span class="hint-tag">✨ PIO+ESP</span>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // TU FIREBASE (YA CONFIGURADO)
+        // ============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAT8x9-5ZMa9btHKZZugm45rCPtMFQrvUY",
+            authDomain: "buscapollitos-9611b.firebaseapp.com",
+            projectId: "buscapollitos-9611b",
+            storageBucket: "buscapollitos-9611b.firebasestorage.app",
+            messagingSenderId: "223967824839",
+            appId: "1:223967824839:web:1f785466bb731c1ab2a7e2"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // ============================================
+        // JUEGO
+        // ============================================
+        const ROWS = 8;
+        const COLS = 8;
+        const TOTAL_MINES = 10;
+        
+        let board = [];
+        let gameOver = false;
+        let gameWon = false;
+        let flagsUsed = 0;
+        let remainingCells = ROWS * COLS - TOTAL_MINES;
+        
+        let playerName = "Jugador";
+        let playerId = 'player_' + Math.random().toString(36).substring(2, 8);
+        let currentRoom = null;
+        let isHost = false;
+        let roomPlayers = [];
+        let currentTurn = null;
+        let myTurn = false;
+
+        // Elementos DOM
+        const boardElement = document.getElementById('gameBoard');
+        const flagsCounter = document.getElementById('flagsCounter');
+        const messageDisplay = document.getElementById('messageDisplay');
+        const multiPanel = document.getElementById('multiPanel');
+        const tutorialModal = document.getElementById('tutorialModal');
+        const roomStatus = document.getElementById('roomStatus');
+        const playersStatus = document.getElementById('playersStatus');
+        const turnDisplay = document.getElementById('turnDisplay');
+        const playerNameInput = document.getElementById('playerNameInput');
+        const playerBadge = document.getElementById('playerBadge');
+
+        // Nombre
+        document.getElementById('setNameBtn').addEventListener('click', function() {
+            const name = playerNameInput.value.trim();
+            if (name) {
+                playerName = name;
+                playerBadge.style.display = 'block';
+                playerBadge.innerHTML = `👤 Jugador: <strong>${playerName}</strong>`;
+                document.querySelector('.name-input-group').style.display = 'none';
+                messageDisplay.textContent = `¡Bienvenido, ${playerName}!`;
+            }
+        });
+
+        function initBoard() {
+            board = [];
+            for (let r = 0; r < ROWS; r++) {
+                let row = [];
+                for (let c = 0; c < COLS; c++) {
+                    row.push({
+                        mine: false,
+                        revealed: false,
+                        flagged: false,
+                        neighborMines: 0
+                    });
+                }
+                board.push(row);
+            }
+
+            let minesPlaced = 0;
+            while (minesPlaced < TOTAL_MINES) {
+                let r = Math.floor(Math.random() * ROWS);
+                let c = Math.floor(Math.random() * COLS);
+                if (!board[r][c].mine) {
+                    board[r][c].mine = true;
+                    minesPlaced++;
+                }
+            }
+
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (board[r][c].mine) continue;
+                    let count = 0;
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            if (dr === 0 && dc === 0) continue;
+                            let nr = r + dr, nc = c + dc;
+                            if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && board[nr][nc].mine) count++;
+                        }
+                    }
+                    board[r][c].neighborMines = count;
+                }
+            }
+
+            gameOver = false;
+            gameWon = false;
+            flagsUsed = 0;
+            remainingCells = ROWS * COLS - TOTAL_MINES;
+            updateCounter();
+            renderBoard();
+        }
+
+        function toRoman(num) {
+            const roman = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+            return roman[num] || num;
+        }
+
+        function renderBoard() {
+            boardElement.innerHTML = '';
+            
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cell = board[r][c];
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = 'cell';
+                    cellDiv.dataset.row = r;
+                    cellDiv.dataset.col = c;
+
+                    if (cell.revealed) {
+                        cellDiv.classList.add('visible');
+                        if (cell.mine) {
+                            cellDiv.classList.add('mine');
+                            cellDiv.textContent = '🐤';
+                        } else {
+                            cellDiv.textContent = cell.neighborMines > 0 ? toRoman(cell.neighborMines) : '';
+                        }
+                    } else {
+                        if (cell.flagged) {
+                            cellDiv.classList.add('flagged');
+                        }
+                    }
+
+                    if (currentRoom && !myTurn && !gameOver) {
+                        cellDiv.classList.add('disabled');
+                    }
+
+                    cellDiv.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (gameOver || gameWon) return;
+                        if (currentRoom && !myTurn) {
+                            messageDisplay.textContent = `⏳ Espera tu turno (turno de ${currentTurn || 'otro'})`;
+                            return;
+                        }
+                        const row = parseInt(this.dataset.row);
+                        const col = parseInt(this.dataset.col);
+                        handleCellClick(row, col);
+                    });
+
+                    cellDiv.addEventListener('contextmenu', function(e) {
+                        e.preventDefault();
+                        if (gameOver || gameWon) return;
+                        if (currentRoom && !myTurn) {
+                            messageDisplay.textContent = `⏳ Espera tu turno (turno de ${currentTurn || 'otro'})`;
+                            return;
+                        }
+                        const row = parseInt(this.dataset.row);
+                        const col = parseInt(this.dataset.col);
+                        handleRightClick(row, col);
+                    });
+
+                    boardElement.appendChild(cellDiv);
+                }
+            }
+        }
+
+        function handleCellClick(row, col) {
+            const cell = board[row][col];
+            if (cell.revealed || cell.flagged) return;
+
+            if (cell.mine) {
+                cell.revealed = true;
+                gameOver = true;
+                messageDisplay.textContent = `💥 ${playerName} pisó un pollito! 💥`;
+                renderBoard();
+                if (db && currentRoom) {
+                    sendGameOverToFirebase(playerName);
+                }
+                return;
+            }
+
+            const queue = [{row, col}];
+            while (queue.length > 0) {
+                const {row, col} = queue.shift();
+                const current = board[row][col];
+                if (current.revealed || current.flagged || current.mine) continue;
+
+                current.revealed = true;
+                remainingCells--;
+
+                if (current.neighborMines === 0) {
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            if (dr === 0 && dc === 0) continue;
+                            let nr = row + dr, nc = col + dc;
+                            if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+                                const neighbor = board[nr][nc];
+                                if (!neighbor.revealed && !neighbor.flagged && !neighbor.mine) {
+                                    queue.push({row: nr, col: nc});
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (remainingCells === 0 && !gameOver) {
+                gameWon = true;
+                gameOver = true;
+                messageDisplay.textContent = `🏆 ${playerName} GANÓ! 🏆`;
+                for (let r = 0; r < ROWS; r++) {
+                    for (let c = 0; c < COLS; c++) {
+                        if (board[r][c].mine && !board[r][c].flagged) {
+                            board[r][c].flagged = true;
+                            flagsUsed++;
+                        }
+                    }
+                }
+            }
+
+            renderBoard();
+            updateCounter();
+            
+            if (db && currentRoom && !gameOver) {
+                switchTurn();
+            }
+        }
+
+        function handleRightClick(row, col) {
+            const cell = board[row][col];
+            if (cell.revealed) return;
+
+            if (!cell.flagged) {
+                if (flagsUsed < TOTAL_MINES) {
+                    cell.flagged = true;
+                    flagsUsed++;
+                }
+            } else {
+                cell.flagged = false;
+                flagsUsed--;
+            }
+
+            renderBoard();
+            updateCounter();
+            
+            if (db && currentRoom && !gameOver) {
+                switchTurn();
+            }
+        }
+
+        function updateCounter() {
+            flagsCounter.textContent = TOTAL_MINES - flagsUsed;
+        }
+
+        async function createRoom() {
+            const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            
+            try {
+                await db.collection('rooms').doc(roomCode).set({
+                    created: firebase.firestore.FieldValue.serverTimestamp(),
+                    hostId: playerId,
+                    hostName: playerName,
+                    players: [{
+                        id: playerId,
+                        name: playerName,
+                        joined: Date.now()
+                    }],
+                    gameStarted: false,
+                    currentTurn: playerId,
+                    currentTurnName: playerName
+                });
+                
+                currentRoom = roomCode;
+                isHost = true;
+                myTurn = true;
+                
+                roomStatus.style.display = 'block';
+                roomStatus.innerHTML = `✅ Sala creada: <strong>${roomCode}</strong><br>Comparte este código con tu amigo`;
+                
+                turnDisplay.style.display = 'block';
+                turnDisplay.innerHTML = `🎮 Turno: <strong>${playerName}</strong> (tú)`;
+                
+                listenForRoomChanges();
+                
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+
+        async function joinRoom() {
+            const roomCode = document.getElementById('roomCode').value.toUpperCase();
+            if (!roomCode) {
+                alert("Introduce un código");
+                return;
+            }
+            
+            try {
+                const roomRef = db.collection('rooms').doc(roomCode);
+                const room = await roomRef.get();
+                
+                if (room.exists) {
+                    const data = room.data();
+                    const newPlayers = [...data.players, {
+                        id: playerId,
+                        name: playerName,
+                        joined: Date.now()
+                    }];
+                    
+                    await roomRef.update({
+                        players: newPlayers
+                    });
+                    
+                    currentRoom = roomCode;
+                    myTurn = false;
+                    
+                    roomStatus.style.display = 'block';
+                    roomStatus.innerHTML = `✅ Conectado a sala: ${roomCode}`;
+                    
+                    turnDisplay.style.display = 'block';
+                    turnDisplay.innerHTML = `⏳ Esperando turno...`;
+                    
+                    listenForRoomChanges();
+                    
+                } else {
+                    alert("Sala no encontrada");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+
+        function listenForRoomChanges() {
+            if (!db || !currentRoom) return;
+            
+            db.collection('rooms').doc(currentRoom).onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    roomPlayers = data.players || [];
+                    
+                    if (roomPlayers.length > 0) {
+                        playersStatus.style.display = 'block';
+                        const playersList = roomPlayers.map(p => p.name).join(' vs ');
+                        playersStatus.innerHTML = `👥 Jugadores: ${playersList}`;
+                    }
+                    
+                    if (data.currentTurn) {
+                        currentTurn = data.currentTurnName || 'otro';
+                        myTurn = (data.currentTurn === playerId);
+                        
+                        if (myTurn) {
+                            turnDisplay.innerHTML = `🎮 Tu turno, <strong>${playerName}</strong>!`;
+                        } else {
+                            turnDisplay.innerHTML = `⏳ Turno de <strong>${currentTurn}</strong>`;
+                        }
+                        
+                        renderBoard();
+                    }
+                    
+                    if (data.gameOver) {
+                        gameOver = true;
+                        messageDisplay.textContent = data.gameOverMessage || 'Partida terminada';
+                        renderBoard();
+                    }
+                }
+            });
+        }
+
+        async function switchTurn() {
+            const roomRef = db.collection('rooms').doc(currentRoom);
+            const room = await roomRef.get();
+            const data = room.data();
+            
+            const otherPlayer = data.players.find(p => p.id !== playerId);
+            if (otherPlayer) {
+                await roomRef.update({
+                    currentTurn: otherPlayer.id,
+                    currentTurnName: otherPlayer.name
+                });
+            }
+        }
+
+        async function sendGameOverToFirebase(loserName) {
+            const winner = roomPlayers.find(p => p.id !== playerId)?.name || 'otro';
+            await db.collection('rooms').doc(currentRoom).update({
+                gameOver: true,
+                gameOverMessage: `💥 ${loserName} perdió! Ganó ${winner} 💥`
+            });
+        }
+
+        // Easter eggs
+        let eggSeq = [];
+        window.addEventListener('keydown', function(e) {
+            const key = e.key.toUpperCase();
+            eggSeq.push(key);
+            if (eggSeq.length > 6) eggSeq.shift();
+            const seq = eggSeq.join('');
+            if (seq.includes('PIO')) {
+                messageDisplay.textContent = '🌸 MODO PIO ACTIVADO 🌸';
+                document.body.style.filter = 'hue-rotate(180deg)';
+                eggSeq = [];
+            }
+            if (seq.includes('ESP')) {
+                messageDisplay.textContent = '🇪🇸 OLÉ! 🇪🇸';
+                document.querySelector('.game-container').style.background = '#ffd700';
+                eggSeq = [];
+            }
+        });
+
+        // Tutorial
+        function checkFirstTime() {
+            if (!localStorage.getItem('tutorialShown')) {
+                tutorialModal.classList.add('show');
+            }
+        }
+
+        // Botones
+        document.getElementById('settingsBtn').addEventListener('click', function() {
+            if (multiPanel.style.display === 'none' || multiPanel.style.display === '') {
+                multiPanel.style.display = 'block';
+            } else {
+                multiPanel.style.display = 'none';
+            }
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            initBoard();
+        });
+
+        document.getElementById('closeTutorialBtn').addEventListener('click', function() {
+            tutorialModal.classList.remove('show');
+            localStorage.setItem('tutorialShown', 'true');
+        });
+
+        document.getElementById('createRoomBtn').addEventListener('click', createRoom);
+        document.getElementById('joinRoomBtn').addEventListener('click', joinRoom);
+
+        initBoard();
+        checkFirstTime();
+    </script>
+</body>
+</html>

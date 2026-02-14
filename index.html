@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🇪🇸 BUSCAPOLLITOS · MULTIJUGADOR MEJORADO 🐤</title>
+    <title>🇪🇸 BUSCAPOLLITOS · COOP & BATTLE 🐤</title>
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -27,7 +27,7 @@
 
         .game-container {
             width: 100%;
-            max-width: 500px;
+            max-width: 520px;
             background: #f5e7c8;
             border-radius: 40px;
             border: 4px solid #c49a6c;
@@ -126,13 +126,13 @@
             background: #f8c150;
             border: none;
             font-size: 1.1rem;
-            padding: 10px 16px;
+            padding: 10px 12px;
             border-radius: 40px;
             font-weight: bold;
             box-shadow: 0 4px 0 #b16f2c;
             cursor: pointer;
             border: 2px solid #ffde9e;
-            min-width: 65px;
+            min-width: 60px;
             touch-action: manipulation;
         }
 
@@ -146,17 +146,51 @@
             box-shadow: 0 4px 0 #b1471c;
         }
 
-        /* NUEVO: Botón Salir (rojo) */
         .btn-exit {
             background: #ff4444;
             box-shadow: 0 4px 0 #aa2222;
             border: 2px solid #ff9999;
         }
 
+        .btn-green {
+            background: #44ff44;
+            box-shadow: 0 4px 0 #22aa22;
+            border: 2px solid #99ff99;
+            color: #1a4d2e;
+        }
+
+        /* NUEVO: Selector de modo */
+        .mode-selector {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0;
+            justify-content: center;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 40px;
+            border: 3px solid #b16f2c;
+            background: #ffefd0;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .mode-btn.selected {
+            background: #f8c150;
+            box-shadow: 0 4px 0 #b16f2c;
+            border: 3px solid #ffde9e;
+        }
+
+        /* Tablero principal */
         .board-wrapper {
             display: flex;
             justify-content: center;
             width: 100%;
+            flex-direction: column;
+            align-items: center;
         }
 
         .board {
@@ -204,6 +238,58 @@
         .cell.disabled {
             opacity: 0.6;
             pointer-events: none;
+        }
+
+        /* NUEVO: Tablero del rival (miniatura) */
+        .rival-board-container {
+            margin: 15px 0 5px;
+            text-align: center;
+        }
+
+        .rival-title {
+            font-size: 1rem;
+            color: #ffd966;
+            background: #263f2b;
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 30px;
+            margin-bottom: 8px;
+        }
+
+        .rival-board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 2px;
+            background: #ab8b62;
+            padding: 8px;
+            border-radius: 15px;
+            width: fit-content;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+
+        .rival-cell {
+            width: 24px;
+            height: 24px;
+            background: #fbeba4;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            border: 1px solid #f0b56c;
+        }
+
+        .rival-cell.revealed {
+            background: #d8c29b;
+        }
+
+        .rival-cell.flagged {
+            background: #ffd966;
+        }
+
+        .rival-cell.mine {
+            background: #ff8c5a;
         }
 
         .multi-panel {
@@ -276,7 +362,7 @@
             border: 2px solid #e6b86b;
         }
 
-        /* NUEVO: Modal de victoria/derrota (pantalla completa) */
+        /* Modal de resultado */
         .result-modal {
             position: fixed;
             top: 0;
@@ -332,20 +418,29 @@
             font-size: 2.5rem;
         }
 
+        .result-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
         .result-btn {
             background: #f8c150;
             border: none;
-            font-size: 1.8rem;
-            padding: 20px 40px;
-            border-radius: 60px;
+            font-size: 1.2rem;
+            padding: 15px;
+            border-radius: 40px;
             font-weight: bold;
-            box-shadow: 0 6px 0 #b16f2c;
+            box-shadow: 0 4px 0 #b16f2c;
             cursor: pointer;
-            margin-top: 20px;
-            width: 100%;
         }
 
-        /* NUEVO: Teclado virtual para Easter eggs */
+        .result-btn.reconnect {
+            background: #44ff44;
+            box-shadow: 0 4px 0 #22aa22;
+        }
+
         .keyboard-modal {
             position: fixed;
             top: 0;
@@ -494,16 +589,19 @@
         </div>
     </div>
 
-    <!-- NUEVO: Modal de resultado (pantalla completa) -->
+    <!-- MODAL DE RESULTADO -->
     <div id="resultModal" class="result-modal">
         <div class="result-content">
             <h2 id="resultEmoji">🏆</h2>
             <p id="resultMessage">Jugador 1 ganó!</p>
-            <button class="result-btn" id="closeResultBtn">CONTINUAR</button>
+            <div class="result-buttons">
+                <button class="result-btn" id="reconnectBtn">🔄 RECONECTAR</button>
+                <button class="result-btn" id="rematchBtn">⚔️ REVANCHA</button>
+            </div>
         </div>
     </div>
 
-    <!-- NUEVO: Teclado virtual para Easter eggs -->
+    <!-- TECLADO VIRTUAL -->
     <div id="keyboardModal" class="keyboard-modal">
         <div class="keyboard-content">
             <div class="keyboard-title">✨ EASTER EGGS ✨</div>
@@ -542,16 +640,28 @@
                 <span id="flagsCounter">10</span>
             </div>
             <button class="btn" id="settingsBtn">⚙️</button>
-            <!-- NUEVO: Botón dinámico (Reset/Salir) -->
             <button class="btn btn-secondary" id="actionBtn">🔄</button>
+        </div>
+
+        <!-- NUEVO: Selector de modo (solo visible en multijugador) -->
+        <div id="modeSelector" class="mode-selector" style="display: none;">
+            <button class="mode-btn" id="coopModeBtn" data-mode="coop">🤝 COOPERATIVO</button>
+            <button class="mode-btn" id="battleModeBtn" data-mode="battle">⚔️ BATALLA</button>
         </div>
 
         <div id="turnDisplay" class="turn-display" style="display: none;">
             ⏳ Esperando turno...
         </div>
 
+        <!-- Tablero principal -->
         <div class="board-wrapper">
             <div class="board" id="gameBoard"></div>
+        </div>
+
+        <!-- NUEVO: Tablero del rival (solo en modo batalla) -->
+        <div id="rivalBoardContainer" class="rival-board-container" style="display: none;">
+            <div class="rival-title">👤 RIVAL</div>
+            <div class="rival-board" id="rivalBoard"></div>
         </div>
 
         <div class="multi-panel" id="multiPanel">
@@ -568,7 +678,6 @@
             </div>
             <div id="roomStatus" class="room-status" style="display: none;"></div>
             <div id="playersStatus" class="room-status" style="display: none;"></div>
-            <!-- NUEVO: Botón para teclado virtual -->
             <button class="btn" id="showKeyboardBtn" style="width: 100%; margin-top: 10px;">⌨️ EASTER EGGS (móvil)</button>
         </div>
 
@@ -620,6 +729,10 @@
         let roomPlayers = [];
         let currentTurn = null;
         let myTurn = false;
+        
+        // NUEVO: Modos de juego
+        let gameMode = 'coop'; // 'coop' o 'battle'
+        let rivalBoard = [];
 
         // Elementos DOM
         const boardElement = document.getElementById('gameBoard');
@@ -638,6 +751,13 @@
         const resultEmoji = document.getElementById('resultEmoji');
         const keyboardModal = document.getElementById('keyboardModal');
         const keyboardDisplay = document.getElementById('keyboardDisplay');
+        const modeSelector = document.getElementById('modeSelector');
+        const coopModeBtn = document.getElementById('coopModeBtn');
+        const battleModeBtn = document.getElementById('battleModeBtn');
+        const rivalBoardContainer = document.getElementById('rivalBoardContainer');
+        const rivalBoardElement = document.getElementById('rivalBoard');
+        const reconnectBtn = document.getElementById('reconnectBtn');
+        const rematchBtn = document.getElementById('rematchBtn');
 
         // Nombre
         document.getElementById('setNameBtn').addEventListener('click', function() {
@@ -648,6 +768,26 @@
                 playerBadge.innerHTML = `👤 Jugador: <strong>${playerName}</strong>`;
                 document.querySelector('.name-input-group').style.display = 'none';
                 messageDisplay.textContent = `¡Bienvenido, ${playerName}!`;
+            }
+        });
+
+        // Selección de modo
+        coopModeBtn.addEventListener('click', function() {
+            gameMode = 'coop';
+            coopModeBtn.classList.add('selected');
+            battleModeBtn.classList.remove('selected');
+            if (db && currentRoom) {
+                db.collection('rooms').doc(currentRoom).update({ gameMode: 'coop' });
+            }
+            rivalBoardContainer.style.display = 'none';
+        });
+
+        battleModeBtn.addEventListener('click', function() {
+            gameMode = 'battle';
+            battleModeBtn.classList.add('selected');
+            coopModeBtn.classList.remove('selected');
+            if (db && currentRoom) {
+                db.collection('rooms').doc(currentRoom).update({ gameMode: 'battle' });
             }
         });
 
@@ -697,6 +837,7 @@
             remainingCells = ROWS * COLS - TOTAL_MINES;
             updateCounter();
             renderBoard();
+            sendBoardToFirebase();
         }
 
         function toRoman(num) {
@@ -729,14 +870,14 @@
                         }
                     }
 
-                    if (currentRoom && !myTurn && !gameOver) {
+                    if (currentRoom && !myTurn && !gameOver && gameMode === 'battle') {
                         cellDiv.classList.add('disabled');
                     }
 
                     cellDiv.addEventListener('click', function(e) {
                         e.preventDefault();
                         if (gameOver || gameWon) return;
-                        if (currentRoom && !myTurn) {
+                        if (currentRoom && !myTurn && gameMode === 'battle') {
                             messageDisplay.textContent = `⏳ Espera tu turno (turno de ${currentTurn || 'otro'})`;
                             return;
                         }
@@ -748,7 +889,7 @@
                     cellDiv.addEventListener('contextmenu', function(e) {
                         e.preventDefault();
                         if (gameOver || gameWon) return;
-                        if (currentRoom && !myTurn) {
+                        if (currentRoom && !myTurn && gameMode === 'battle') {
                             messageDisplay.textContent = `⏳ Espera tu turno (turno de ${currentTurn || 'otro'})`;
                             return;
                         }
@@ -762,6 +903,33 @@
             }
         }
 
+        function renderRivalBoard(rivalData) {
+            if (!rivalData || gameMode !== 'battle') return;
+            
+            rivalBoardElement.innerHTML = '';
+            
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cell = rivalData[r][c];
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = 'rival-cell';
+                    
+                    if (cell.revealed) {
+                        cellDiv.classList.add('revealed');
+                        if (cell.mine) {
+                            cellDiv.classList.add('mine');
+                            cellDiv.textContent = '🐤';
+                        }
+                    } else if (cell.flagged) {
+                        cellDiv.classList.add('flagged');
+                        cellDiv.textContent = '🇪🇸';
+                    }
+                    
+                    rivalBoardElement.appendChild(cellDiv);
+                }
+            }
+        }
+
         function handleCellClick(row, col) {
             const cell = board[row][col];
             if (cell.revealed || cell.flagged) return;
@@ -771,7 +939,12 @@
                 gameOver = true;
                 renderBoard();
                 if (db && currentRoom) {
-                    sendGameOverToFirebase(playerName);
+                    sendBoardToFirebase();
+                    if (gameMode === 'coop') {
+                        sendCoopGameOver();
+                    } else {
+                        sendGameOverToFirebase(playerName);
+                    }
                 }
                 return;
             }
@@ -813,14 +986,20 @@
                     }
                 }
                 if (db && currentRoom) {
-                    sendVictoryToFirebase(playerName);
+                    sendBoardToFirebase();
+                    if (gameMode === 'coop') {
+                        sendCoopVictory();
+                    } else {
+                        sendVictoryToFirebase(playerName);
+                    }
                 }
             }
 
             renderBoard();
             updateCounter();
+            sendBoardToFirebase();
             
-            if (db && currentRoom && !gameOver) {
+            if (db && currentRoom && !gameOver && gameMode === 'battle') {
                 switchTurn();
             }
         }
@@ -841,8 +1020,9 @@
 
             renderBoard();
             updateCounter();
+            sendBoardToFirebase();
             
-            if (db && currentRoom && !gameOver) {
+            if (db && currentRoom && !gameOver && gameMode === 'battle') {
                 switchTurn();
             }
         }
@@ -851,7 +1031,16 @@
             flagsCounter.textContent = TOTAL_MINES - flagsUsed;
         }
 
-        // NUEVO: Mostrar resultado en pantalla completa
+        function sendBoardToFirebase() {
+            if (!db || !currentRoom) return;
+            db.collection('rooms').doc(currentRoom).collection('players').doc(playerId).update({
+                board: board,
+                flagsUsed: flagsUsed,
+                gameOver: gameOver,
+                gameWon: gameWon
+            });
+        }
+
         function showResult(winner, loser, isVictory) {
             if (isVictory) {
                 resultEmoji.textContent = '🏆';
@@ -859,6 +1048,17 @@
             } else {
                 resultEmoji.textContent = '💥';
                 resultMessage.innerHTML = `<span class="loser">${loser}</span> perdió...<br> Ganó <span class="winner">${winner}</span>!`;
+            }
+            resultModal.classList.add('show');
+        }
+
+        function showCoopResult(won) {
+            if (won) {
+                resultEmoji.textContent = '🏆';
+                resultMessage.innerHTML = `<span class="winner">¡VICTORIA EN EQUIPO!</span> 🎉`;
+            } else {
+                resultEmoji.textContent = '💥';
+                resultMessage.innerHTML = `<span class="loser">DERROTA EN EQUIPO...</span>`;
             }
             resultModal.classList.add('show');
         }
@@ -878,7 +1078,17 @@
                     }],
                     gameStarted: false,
                     currentTurn: playerId,
-                    currentTurnName: playerName
+                    currentTurnName: playerName,
+                    gameMode: gameMode
+                });
+                
+                await db.collection('rooms').doc(roomCode).collection('players').doc(playerId).set({
+                    id: playerId,
+                    name: playerName,
+                    board: board,
+                    flagsUsed: flagsUsed,
+                    gameOver: false,
+                    gameWon: false
                 });
                 
                 currentRoom = roomCode;
@@ -888,10 +1098,12 @@
                 roomStatus.style.display = 'block';
                 roomStatus.innerHTML = `✅ Sala creada: <strong>${roomCode}</strong><br>Comparte este código con tu amigo`;
                 
-                turnDisplay.style.display = 'block';
-                turnDisplay.innerHTML = `🎮 Turno: <strong>${playerName}</strong> (tú)`;
+                turnDisplay.style.display = gameMode === 'battle' ? 'block' : 'none';
+                if (gameMode === 'battle') {
+                    turnDisplay.innerHTML = `🎮 Turno: <strong>${playerName}</strong> (tú)`;
+                }
                 
-                // NUEVO: Cambiar botón a "Salir"
+                modeSelector.style.display = 'flex';
                 actionBtn.textContent = '🚪 SALIR';
                 actionBtn.classList.add('btn-exit');
                 
@@ -915,6 +1127,8 @@
                 
                 if (room.exists) {
                     const data = room.data();
+                    gameMode = data.gameMode || 'coop';
+                    
                     const newPlayers = [...data.players, {
                         id: playerId,
                         name: playerName,
@@ -925,16 +1139,35 @@
                         players: newPlayers
                     });
                     
+                    await db.collection('rooms').doc(roomCode).collection('players').doc(playerId).set({
+                        id: playerId,
+                        name: playerName,
+                        board: board,
+                        flagsUsed: flagsUsed,
+                        gameOver: false,
+                        gameWon: false
+                    });
+                    
                     currentRoom = roomCode;
                     myTurn = false;
                     
                     roomStatus.style.display = 'block';
                     roomStatus.innerHTML = `✅ Conectado a sala: ${roomCode}`;
                     
-                    turnDisplay.style.display = 'block';
-                    turnDisplay.innerHTML = `⏳ Esperando turno...`;
+                    turnDisplay.style.display = gameMode === 'battle' ? 'block' : 'none';
+                    if (gameMode === 'battle') {
+                        turnDisplay.innerHTML = `⏳ Esperando turno...`;
+                    }
                     
-                    // NUEVO: Cambiar botón a "Salir"
+                    modeSelector.style.display = 'flex';
+                    if (gameMode === 'coop') {
+                        coopModeBtn.classList.add('selected');
+                        battleModeBtn.classList.remove('selected');
+                    } else {
+                        battleModeBtn.classList.add('selected');
+                        coopModeBtn.classList.remove('selected');
+                    }
+                    
                     actionBtn.textContent = '🚪 SALIR';
                     actionBtn.classList.add('btn-exit');
                     
@@ -948,7 +1181,6 @@
             }
         }
 
-        // NUEVO: Salir de la sala
         function leaveRoom() {
             currentRoom = null;
             isHost = false;
@@ -956,10 +1188,38 @@
             roomStatus.style.display = 'none';
             playersStatus.style.display = 'none';
             turnDisplay.style.display = 'none';
+            modeSelector.style.display = 'none';
+            rivalBoardContainer.style.display = 'none';
             actionBtn.textContent = '🔄';
             actionBtn.classList.remove('btn-exit');
             initBoard();
             messageDisplay.textContent = 'Has salido de la sala';
+        }
+
+        function reconnectToRoom() {
+            if (currentRoom) {
+                resultModal.classList.remove('show');
+                listenForRoomChanges();
+                messageDisplay.textContent = 'Reconectado a la sala';
+            }
+        }
+
+        function rematch() {
+            resultModal.classList.remove('show');
+            initBoard();
+            if (db && currentRoom) {
+                sendBoardToFirebase();
+                if (gameMode === 'battle') {
+                    db.collection('rooms').doc(currentRoom).update({
+                        gameOver: false,
+                        currentTurn: isHost ? playerId : roomPlayers.find(p => p.id !== playerId)?.id
+                    });
+                } else {
+                    db.collection('rooms').doc(currentRoom).update({
+                        gameOver: false
+                    });
+                }
+            }
         }
 
         function listenForRoomChanges() {
@@ -976,7 +1236,11 @@
                         playersStatus.innerHTML = `👥 Jugadores: ${playersList}`;
                     }
                     
-                    if (data.currentTurn) {
+                    if (data.gameMode) {
+                        gameMode = data.gameMode;
+                    }
+                    
+                    if (gameMode === 'battle' && data.currentTurn) {
                         currentTurn = data.currentTurnName || 'otro';
                         myTurn = (data.currentTurn === playerId);
                         
@@ -989,14 +1253,27 @@
                         renderBoard();
                     }
                     
-                    // NUEVO: Mostrar resultado cuando alguien gana/pierde
-                    if (data.gameOver) {
-                        gameOver = true;
-                        if (data.winner && data.loser) {
-                            showResult(data.winner, data.loser, data.isVictory);
-                        }
-                        renderBoard();
-                    }
+                    // Escuchar tableros de otros jugadores
+                    db.collection('rooms').doc(currentRoom).collection('players').onSnapshot((snapshot) => {
+                        snapshot.forEach((playerDoc) => {
+                            const playerData = playerDoc.data();
+                            if (playerData.id !== playerId && playerData.board) {
+                                if (gameMode === 'battle') {
+                                    rivalBoardContainer.style.display = 'block';
+                                    renderRivalBoard(playerData.board);
+                                }
+                                if (gameMode === 'coop' && playerData.gameOver) {
+                                    gameOver = true;
+                                    if (playerData.gameWon) {
+                                        showCoopResult(true);
+                                    } else {
+                                        showCoopResult(false);
+                                    }
+                                    renderBoard();
+                                }
+                            }
+                        });
+                    });
                 }
             });
         }
@@ -1018,10 +1295,7 @@
         async function sendGameOverToFirebase(loserName) {
             const winner = roomPlayers.find(p => p.id !== playerId)?.name || 'otro';
             await db.collection('rooms').doc(currentRoom).update({
-                gameOver: true,
-                winner: winner,
-                loser: loserName,
-                isVictory: false
+                gameOver: true
             });
             showResult(winner, loserName, false);
         }
@@ -1029,12 +1303,23 @@
         async function sendVictoryToFirebase(winnerName) {
             const loser = roomPlayers.find(p => p.id !== playerId)?.name || 'otro';
             await db.collection('rooms').doc(currentRoom).update({
-                gameOver: true,
-                winner: winnerName,
-                loser: loser,
-                isVictory: true
+                gameOver: true
             });
             showResult(winnerName, loser, true);
+        }
+
+        async function sendCoopGameOver() {
+            await db.collection('rooms').doc(currentRoom).update({
+                gameOver: true
+            });
+            showCoopResult(false);
+        }
+
+        async function sendCoopVictory() {
+            await db.collection('rooms').doc(currentRoom).update({
+                gameOver: true
+            });
+            showCoopResult(true);
         }
 
         // Easter eggs
@@ -1059,7 +1344,6 @@
             keyboardDisplay.textContent = eggSeq.join(' ');
         }
 
-        // Teclado virtual
         document.querySelectorAll('.key-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const key = this.dataset.key;
@@ -1081,19 +1365,15 @@
             keyboardDisplay.textContent = '';
         });
 
-        // Cerrar resultado
-        document.getElementById('closeResultBtn').addEventListener('click', function() {
-            resultModal.classList.remove('show');
-        });
+        reconnectBtn.addEventListener('click', reconnectToRoom);
+        rematchBtn.addEventListener('click', rematch);
 
-        // Tutorial
         function checkFirstTime() {
             if (!localStorage.getItem('tutorialShown')) {
                 tutorialModal.classList.add('show');
             }
         }
 
-        // Botones
         document.getElementById('settingsBtn').addEventListener('click', function() {
             if (multiPanel.style.display === 'none' || multiPanel.style.display === '') {
                 multiPanel.style.display = 'block';
@@ -1102,7 +1382,6 @@
             }
         });
 
-        // NUEVO: Botón dinámico (Reset o Salir)
         actionBtn.addEventListener('click', function() {
             if (currentRoom) {
                 leaveRoom();
